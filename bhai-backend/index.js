@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from "mongoose";
 import Chat from "./models/chat.js";
-import UserChats from "./models/userchats.js";
+import UserChats from "./models/userChats.js";
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node'
 
 dotenv.config();
