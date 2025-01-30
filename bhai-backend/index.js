@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: process.env.CLIENT_URL.trim(),
     credentials: true,
 }));
 
@@ -35,6 +35,10 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGE_KIT_ENDPOINT.trim(),
     publicKey: process.env.IMAGE_KIT_PUBLIC_KEY.trim(),
     privateKey: process.env.IMAGE_KIT_PRIVATE_KEY.trim()
+});
+
+app.get("/", (req, res) => {
+    res.send("Welcome to the BHAI Backend API");
 });
 
 app.get("/api/upload", (req, res) => {
