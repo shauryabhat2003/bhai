@@ -15,6 +15,7 @@ const app = express();
 app.use(cors({
     origin: process.env.CLIENT_URL.trim(),
     credentials: true,
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept']
 }));
 
 app.use(express.json());
