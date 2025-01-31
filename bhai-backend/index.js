@@ -20,7 +20,8 @@ const __dirname = path.dirname(__filename);
 app.use(cors({
     origin: process.env.CLIENT_URL.trim(),
     credentials: true,
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
 
 app.use(express.json());
