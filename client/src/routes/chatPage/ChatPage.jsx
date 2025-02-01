@@ -26,8 +26,8 @@ const ChatPage = () => {
           {isPending
             ? "Loading..."
             : error
-              ? "Something went wrong!"
-              : data?.history?.map((message, i) => (
+            ? "Something went wrong!"
+            : data?.history?.map((message, i) => (
                 <>
                   {message.img && (
                     <IKImage
@@ -46,12 +46,12 @@ const ChatPage = () => {
                     }
                     key={i}
                   >
-                    <Markdown>{message.parts?.[0]?.text || "No content available"}</Markdown>
+                    <Markdown>{message.parts[0].text}</Markdown>
                   </div>
                 </>
               ))}
 
-          {data && <NewPrompt data={data} />}
+          {data && <NewPrompt data={data}/>}
         </div>
       </div>
     </div>
