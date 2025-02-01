@@ -14,10 +14,18 @@ const ChatPage = () => {
     queryFn: () =>
       fetch(`${import.meta.env.VITE_API_URL}/api/chats/${chatId}`, {
         credentials: "include",
-      }).then((res) => res.json()),
+      }).then((res) => {
+        if (!res.ok) {
+          throw new Error(`Error: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      }),
   });
 
   console.log(data);
+  if (error) {
+    console.error("Error fetching chat:", error);
+  }
 
   return (
     <div className="chatPage">
@@ -26,7 +34,7 @@ const ChatPage = () => {
           {isPending
             ? "Loading..."
             : error
-            ? "Something went wrong!"
+            ? `Something went wrong! ${error.message}`
             : data?.history?.map((message, i) => (
                 <>
                   {message.img && (
@@ -51,7 +59,7 @@ const ChatPage = () => {
                 </>
               ))}
 
-          {data && <NewPrompt data={data}/>}
+          {data && <NewPrompt data={data} />}
         </div>
       </div>
     </div>
