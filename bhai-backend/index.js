@@ -6,8 +6,8 @@ import ImageKit from "imagekit";
 import mongoose from "mongoose";
 import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
-import { clerkMiddleware, requireAuth, getAuth, clerkClient } from "@clerk/express";
-import dotenv from "dotenv";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -19,21 +19,14 @@ const __dirname = path.dirname(__filename);
 
 app.use(
   cors({
-    origin: [process.env.VITE_API_URL, "https://bhaiai.netlify.app"],
+    origin: [process.env.CLIENT_URL],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   })
 );
-
 app.use(express.json());
 app.use(clerkMiddleware());
-
-const imagekit = new ImageKit({
-  publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
-  privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
-  urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
-});
 
 const connect = async () => {
   try {
@@ -44,7 +37,11 @@ const connect = async () => {
   }
 };
 
-connect();
+const imagekit = new ImageKit({
+  urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
+  publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
+});
 
 app.get("/api/upload", (req, res) => {
   const result = imagekit.getAuthenticationParameters();
@@ -52,14 +49,11 @@ app.get("/api/upload", (req, res) => {
 });
 
 app.post("/api/chats", requireAuth(), async (req, res) => {
-  const { userId } = getAuth(req);
+  const userId = req.auth.userId;
   const { text } = req.body;
 
-  console.log("POST /api/chats");
-  console.log("Request Headers:", req.headers);
-  console.log("Request Body:", req.body);
-
   try {
+    // CREATE A NEW CHAT
     const newChat = new Chat({
       userId: userId,
       history: [{ role: "user", parts: [{ text }] }],
@@ -67,89 +61,74 @@ app.post("/api/chats", requireAuth(), async (req, res) => {
 
     const savedChat = await newChat.save();
 
-    const userChats = await UserChats.findOne({ userId: userId });
-    if (!userChats) {
+    // CHECK IF THE USERCHATS EXISTS
+    const userChats = await UserChats.find({ userId: userId });
+
+    // IF DOESN'T EXIST CREATE A NEW ONE AND ADD THE CHAT IN THE CHATS ARRAY
+    if (!userChats.length) {
       const newUserChats = new UserChats({
         userId: userId,
         chats: [
           {
-            _id: savedChat._id.toString(),
+            _id: savedChat._id,
             title: text.substring(0, 40),
-          }
-        ]
+          },
+        ],
       });
 
       await newUserChats.save();
     } else {
-      await UserChats.updateOne({ userId: userId }, {
-        $push: {
-          chats: {
-            _id: savedChat._id.toString(),
-            title: text.substring(0, 40),
-          }
+      // IF EXISTS, PUSH THE CHAT TO THE EXISTING ARRAY
+      await UserChats.updateOne(
+        { userId: userId },
+        {
+          $push: {
+            chats: {
+              _id: savedChat._id,
+              title: text.substring(0, 40),
+            },
+          },
         }
-      });
-    }
+      );
 
-    res.status(201).send({ id: savedChat._id.toString() });
+      res.status(201).send(newChat._id);
+    }
   } catch (err) {
-    console.log("Error in POST /api/chats:", err);
-    res.status(500).send("Error!!", err.message);
+    console.log(err);
+    res.status(500).send("Error creating chat!");
   }
 });
 
 app.get("/api/userchats", requireAuth(), async (req, res) => {
-  const { userId } = getAuth(req);
-
-  console.log("GET /api/userchats");
-  console.log("Request Headers:", req.headers);
+  const userId = req.auth.userId;
 
   try {
-    const userChats = await UserChats.findOne({ userId });
-    if (userChats) {
-      res.status(200).send(userChats.chats);
-    } else {
-      res.status(404).send("No chats found for this user.");
-    }
+    const userChats = await UserChats.find({ userId });
+
+    res.status(200).send(userChats[0].chats);
   } catch (err) {
-    console.log("Error in GET /api/userchats:", err);
-    res.status(500).send("Error fetching user chats!");
+    console.log(err);
+    res.status(500).send("Error fetching userchats!");
   }
 });
 
 app.get("/api/chats/:id", requireAuth(), async (req, res) => {
-  const { userId } = getAuth(req);
-  const { id } = req.params;
-
-  console.log("GET /api/chats/:id");
-  console.log("Request Headers:", req.headers);
-  console.log("Request Params:", req.params);
+  const userId = req.auth.userId;
 
   try {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).send("Invalid chat ID");
-    }
+    const chat = await Chat.findOne({ _id: req.params.id, userId });
 
-    const chat = await Chat.findOne({ _id: new mongoose.Types.ObjectId(id), userId });
-    if (chat) {
-      res.status(200).send(chat);
-    } else {
-      res.status(404).send("Chat not found.");
-    }
+    res.status(200).send(chat);
   } catch (err) {
-    console.log("Error in GET /api/chats/:id:", err);
+    console.log(err);
     res.status(500).send("Error fetching chat!");
   }
 });
 
 app.put("/api/chats/:id", requireAuth(), async (req, res) => {
-  const { userId } = getAuth(req);
-  const { question, answer, img } = req.body;
+  const userId = req.auth.userId;
 
-  console.log("PUT /api/chats/:id");
-  console.log("Request Headers:", req.headers);
-  console.log("Request Body:", req.body);
-  console.log("Request Params:", req.params);
+  const { question, answer, img } = req.body;
 
   const newItems = [
     ...(question
@@ -159,47 +138,36 @@ app.put("/api/chats/:id", requireAuth(), async (req, res) => {
   ];
 
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).send("Invalid chat ID");
-    }
-
-    const updatedChat = await Chat.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(req.params.id), userId },
+    const updatedChat = await Chat.updateOne(
+      { _id: req.params.id, userId },
       {
         $push: {
           history: {
             $each: newItems,
-          }
-        }
-      },
-      { new: true }
+          },
+        },
+      }
     );
-
     res.status(200).send(updatedChat);
   } catch (err) {
-    console.log("Error in PUT /api/chats/:id:", err);
+    console.log(err);
     res.status(500).send("Error adding conversation!");
-  }
-});
-
-app.get('/users', requireAuth(), async (req, res) => {
-  console.log("GET /users");
-  console.log("Request Headers:", req.headers);
-
-  try {
-    const users = await clerkClient.users.getUserList();
-    return res.json({ users });
-  } catch (err) {
-    console.log("Error in GET /users:", err);
-    res.status(500).send("Error fetching users!");
   }
 });
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(401).send('Unauthenticated!');
+  res.status(401).send("Unauthenticated!");
 });
 
+// PRODUCTION
+// app.use(express.static(path.join(__dirname, "../client/dist")));
+
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
+// });
+
 app.listen(port, () => {
-  console.log(`Server running on ${port}`);
+  connect();
+  console.log("Server running on 3000");
 });
