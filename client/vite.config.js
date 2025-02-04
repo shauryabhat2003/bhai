@@ -12,10 +12,7 @@ export default defineConfig({
     port: 5173,
     host: true
   },
-  export default defineConfig({
-    build: {
-      outDir: '../server/client/dist'
-    }
-  }),
-  
+  build: {
+    outDir: '../server/client/dist'
+  }
 })
