@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(
   cors({
-    origin: ["https://bhai-ai.vercel.app", "https://bhai-ai.onrender.com", "https://bhai-g17gsnkzt-shauryabhat2003s-projects.vercel.app", "https://bhaiai.netlify.app"],
+    origin: [process.env.VITE_API_URL, "https://bhaiai.netlify.app"],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
