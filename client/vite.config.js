@@ -13,6 +13,6 @@ export default defineConfig({
     host: true
   },
   build: {
-    outDir: '../server/client/dist'
+    outDir: 'dist' 
   }
 })
