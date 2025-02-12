@@ -2,6 +2,10 @@
 
 An AI-powered chat application built with React and Node.js.
 
+![alt text](assets/IMG1.png)
+![alt text](assets/IMG2.png)
+![alt text](assets/IMG3.png)
+
 ## Features
 
 - AI Chat Interface
