@@ -3,12 +3,14 @@
 An AI-powered chat application built with React and Node.js.
 
 ## Features
+
 - AI Chat Interface
 - Image Analysis
 - Code Helper
 - User Authentication
 
 ## Tech Stack
+
 - Frontend: React, Vite, TailwindCSS
 - Backend: Node.js, Express, MongoDB
 - Authentication: Clerk
@@ -16,8 +18,10 @@ An AI-powered chat application built with React and Node.js.
 - Image Processing: ImageKit
 
 ## Setup Instructions
+
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    # Install backend dependencies
    cd bhai-backend
@@ -26,3 +30,4 @@ An AI-powered chat application built with React and Node.js.
    # Install frontend dependencies
    cd ../bhai-frontend
    npm install
+   ```
